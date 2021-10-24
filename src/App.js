@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
 import abi from './utils/MyEpicNFT.json';
 import ReactLoading from 'react-loading';
+import Modal from 'react-modal';
 
 // Constants
 // const TWITTER_HANDLE = '_buildspace';
@@ -27,6 +28,12 @@ const App = () => {
   const [totalNFTMinted, setTotalNFTMinted] = useState(0);
   const [currentChainId, setCurrentChainId] = useState('');
   const [minting, setMinting] = useState(false);
+
+  const [modalBox, setModalBox] = useState({
+    open: false,
+    message: '',
+  });
+
   const contractABI = abi.abi;
 
   const checkIfWalletIsConnected = async () => {
@@ -129,9 +136,30 @@ const App = () => {
 
         connectedContract.on('NewEpicNFTMinted', (from, tokenId) => {
           console.log(`From: ${from}, token id: ${tokenId}`);
-          alert(
-            `Hey there! We've minted your NFT and sent it to your wallet. It may be blank right now. It can take a max of 10 min to show up on OpenSea. Here's the link: ${OPENSEA_LINK}/${CONTRACT_ADDRESS}/${tokenId.toNumber()}`
-          );
+          // alert(
+          //   `Hey there! We've minted your NFT and sent it to your wallet. It may be blank right now. It can take a max of 10 min to show up on OpenSea. Here's the link: ${OPENSEA_LINK}/${CONTRACT_ADDRESS}/${tokenId.toNumber()}`
+          // );
+          setModalBox({
+            open: true,
+            message: `
+            Hey there!<br /><br />
+            We've minted your NFT and sent it to your wallet.
+            <br /><br />
+            It may be blank right now.
+            <br /><br />
+            It can take a max of 10 min to show up on OpenSea.
+            <br /><br />
+            Here's the link:
+            <a
+                href="${OPENSEA_LINK}/${CONTRACT_ADDRESS}/${tokenId.toNumber()}"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+              ${OPENSEA_LINK}/${CONTRACT_ADDRESS}/${tokenId.toNumber()}
+              </a>
+            `,
+          });
+
           setMinting(false);
         });
 
@@ -196,7 +224,8 @@ const App = () => {
         console.log('Ethereum object does not exist.');
       }
     } catch (error) {
-      console.log(error);
+      console.log(`Error Code: ${error.code}, Message: ${error.message}`);
+      setMinting(false);
     }
   };
 
@@ -234,6 +263,14 @@ const App = () => {
 
     // eslint-disable-next-line
   }, []);
+
+  const visitOpenSea = () => {
+    console.log('Visit OpenSea');
+    window.open(
+      'https://testnets.opensea.io/0x59cc0f814e3d6216f230e3f0a75e5d561774f06c',
+      '_blank' // <- This is what makes it open in a new window.
+    );
+  };
 
   // Render Methods
   const renderNotConnectedContainer = () => (
@@ -275,9 +312,25 @@ const App = () => {
     <div className="App">
       <div className="container">
         <div className="header-container">
-          <p className="header gradient-text">My NFT Collection</p>
+          <p className="header gradient-text">Create your NFT Collection!</p>
           <p className="sub-text">
-            Each unique. Each beautiful. Discover your NFT today.
+            Each unique. Each beautiful. Connect your MetaMask wallet and mint
+            your own NFT.
+          </p>
+          <p style={{ color: 'white', fontSize: '14px' }}>
+            This is deployed on Rinkeby Test Network.
+            <br />
+            You can get free (<del>fake</del>) Eth here{' '}
+            <a
+              href="https://app.mycrypto.com/faucet"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              https://app.mycrypto.com/faucet
+            </a>{' '}
+            <br />
+            (make sure to connect your wallet to the site and click on this link
+            again)
           </p>
           <p className="sub-text">
             {currentChainId === rinkebyChainId
@@ -286,6 +339,13 @@ const App = () => {
           </p>
 
           {currentAccount ? renderMintUI() : renderNotConnectedContainer()}
+
+          <br />
+          <br />
+
+          <button onClick={visitOpenSea} className="cta-button opensea-button">
+            Visit my NFT collection
+          </button>
         </div>
         <div className="footer-container">
           <img alt="Twitter Logo" className="twitter-logo" src={twitterLogo} />
@@ -294,9 +354,16 @@ const App = () => {
             href={TWITTER_LINK_MT}
             target="_blank"
             rel="noreferrer"
-          >{`@${TWITTER_HANDLE_MT}`}</a>
+          >{`Follow me on Twitter @${TWITTER_HANDLE_MT}`}</a>
         </div>
       </div>
+
+      <Modal
+        isOpen={modalBox.open}
+        onRequestClose={() => setModalBox({ open: false, message: '' })}
+      >
+        <div dangerouslySetInnerHTML={{ __html: modalBox.message }}></div>
+      </Modal>
     </div>
   );
 };

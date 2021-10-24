@@ -123,3 +123,12 @@
     background-position: 0% 50%;
   }
 }
+
+a {
+  text-decoration: underline;
+  color: inherit;
+}
+
+a:hover {
+  text-decoration: underline;
+}
