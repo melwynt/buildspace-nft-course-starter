@@ -13,7 +13,7 @@ const TWITTER_LINK_MT = `https://twitter.com/${TWITTER_HANDLE_MT}`;
 const OPENSEA_LINK = 'https://testnets.opensea.io/assets';
 const TOTAL_MINT_COUNT = 50;
 
-const CONTRACT_ADDRESS = '0x1fD80a912f2592941B9746CDA3Afe887ed0b3Cda';
+const CONTRACT_ADDRESS = '0x4E0301935cd61c36997b439fC524a685052a9fE7';
 
 // String, hex code of the chainId of the Rinkebey test network
 const rinkebyChainId = '0x4';
@@ -34,6 +34,7 @@ const App = () => {
     console.log('check if wallet is connected...');
 
     const { ethereum } = window;
+
     const networkVersion = ethereum ? ethereum.networkVersion : null;
     console.log(
       `#checkIfWalletIsConnected - Network Version: ${networkVersion}`
@@ -41,33 +42,37 @@ const App = () => {
 
     // const isMetaMask = ethereum ? ethereum.isMetaMask : null;
 
-    if (!ethereum) {
-      console.log('Make sure you have metamask!');
-    } else {
-      console.log('We have the ethereum object', ethereum);
-    }
-
-    const accounts = await ethereum.request({ method: 'eth_accounts' });
-
-    if (accounts.length !== 0) {
-      const account = accounts[0];
-      console.log('Found an authorized account: ', account);
-      setCurrentAccount(account);
-
-      let chainId = await ethereum.request({ method: 'eth_chainId' });
-      setCurrentChainId(chainId);
-
-      console.log('Connected to chain ' + chainId);
-
-      // if (chainId !== rinkebyChainId) {
-      //   alert('You are not connected to the Rinkeby Test Network!');
-      // }
-
-      if (chainId === rinkebyChainId) {
-        setupEventListener();
+    try {
+      if (!ethereum) {
+        console.log('Make sure you have metamask!');
+      } else {
+        console.log('We have the ethereum object', ethereum);
       }
-    } else {
-      console.log('No authorized account found.');
+
+      const accounts = await ethereum.request({ method: 'eth_accounts' });
+
+      if (accounts.length !== 0) {
+        const account = accounts[0];
+        console.log('Found an authorized account: ', account);
+        setCurrentAccount(account);
+
+        let chainId = await ethereum.request({ method: 'eth_chainId' });
+        setCurrentChainId(chainId);
+
+        console.log('Connected to chain ' + chainId);
+
+        // if (chainId !== rinkebyChainId) {
+        //   alert('You are not connected to the Rinkeby Test Network!');
+        // }
+
+        if (chainId === rinkebyChainId) {
+          setupEventListener();
+        }
+      } else {
+        console.log('No authorized account found.');
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -198,21 +203,34 @@ const App = () => {
   useEffect(() => {
     checkIfWalletIsConnected();
 
-    window.ethereum.on('accountsChanged', (accounts) => {
-      if (accounts.length > 0) console.log(`Account connected: ${accounts[0]}`);
-      else {
-        console.log('Account disconnected');
-        setCurrentAccount('');
-        setCurrentChainId('');
-      }
-    });
+    const { ethereum } = window;
 
-    window.ethereum.on('chainChanged', async (_) => {
-      console.log('Chain changed');
-      let chainId = await window.ethereum.request({ method: 'eth_chainId' });
-      console.log(chainId, typeof chainId);
-      setCurrentChainId(chainId);
-    });
+    try {
+      if (ethereum) {
+        ethereum.on('accountsChanged', (accounts) => {
+          if (accounts.length > 0)
+            console.log(`Account connected: ${accounts[0]}`);
+          else {
+            console.log('Account disconnected');
+            setCurrentAccount('');
+            setCurrentChainId('');
+          }
+        });
+
+        ethereum.on('chainChanged', async (_) => {
+          console.log('Chain changed');
+          let chainId = await window.ethereum.request({
+            method: 'eth_chainId',
+          });
+          console.log(chainId, typeof chainId);
+          setCurrentChainId(chainId);
+        });
+      } else {
+        console.log("Ethereum object doesn't exist.");
+      }
+    } catch (error) {
+      console.log(error);
+    }
 
     // eslint-disable-next-line
   }, []);
